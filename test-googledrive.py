@@ -9,6 +9,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from init_bot import initialize
+
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -41,34 +43,41 @@ def main():
         print("No subslist.xlsx file found. Please create one and try again.")
 
     try:
-        # service = build('drive', 'v3', credentials=creds)
-        # result = searchFile(service=service)
+        service = build('drive', 'v3', credentials=creds)
+        subs_excel_file = pd.read_excel("subslist.xlsx")
 
-        # # print(result)
-        # changePermissions(folder_obj=result, service=service)
-
-        # Call the Drive v3 API
+        id_numbers = subs_excel_file['ID NUMBER'].values
         
+        # looping over ID numbers
+        for id_number in id_numbers:
+            result = searchFile(service=service, filename=id_number)
+            print(result)
+            changePermissions(folder_obj=result, service=service)
+        
+        print('')
+        print('==================================================')
+        print('Done!!!')
+        print('Say thank you, Master to James Jilhaney UwU')
 
-        # if not items:
-        #     print('No files found.')
-        #     return
-        # print('Files:')
-        # for item in items:
-        #     print(u'{0} ({1})'.format(item['name'], item['id']))
     except HttpError as error:
         # TODO(developer) - Handle errors from drive API.
         print(f'An error occurred: {error}')
 
 
-def searchFile(service):
+def searchFile(service, filename):
+    print(f'id is: {filename}')
     try:
         page_token = None
-        results = service.files().list(q="mimeType = 'application/vnd.google-apps.folder' and name='20190016830'",
+        results = service.files().list(q="mimeType = 'application/vnd.google-apps.folder' and name='{filename}'".format(filename=filename),
                                             spaces='drive',
                                             fields='nextPageToken, '
                                                    'files(id, name)',
                                             pageToken=page_token).execute()
+
+
+        if results == None:
+            print(f"Results not found. Skipping searching for folder named {filename}")
+        
         for file in results.get('files', []):
                 # Process change
                 # print(F'Found file: {file.get("name")}, {file.get("id")}')
@@ -80,33 +89,36 @@ def searchFile(service):
         print(error)
 
 def changePermissions(folder_obj, service):
-    
-    email = folder_obj.get('folder_name')
-    id = folder_obj.get('id')
-    
-    request_body = {
-        'role' : 'reader',
-        'type' : 'user',
-        'emailAddress': email + '@my.xu.edu.ph'
-    }
-    
-    permission_response =  service.permissions().create(
-       fileId = folder_obj.get('id'),
-       body = request_body
-        ).execute()
 
-    print(permission_response)
+    try:
+        email = folder_obj.get('folder_name')
+        id = folder_obj.get('id')
+        
+        request_body = {
+            'role' : 'reader',
+            'type' : 'user',
+            'emailAddress': email + '@my.xu.edu.ph'
+        }
+        
+        permission_response =  service.permissions().create(
+        fileId = folder_obj.get('id'),
+        body = request_body
+            ).execute()
 
+        # print(permission_response)
+    
+        getSharableLink(service=service,id=id)
+    
+    except HttpError as error:
+        print(error)
+
+def getSharableLink(service, id):
     share_link = service.files().get(
         fileId=id,
         fields='webViewLink'
     ).execute()
 
     print(share_link)
-    
-
-def getSharableLink():
-    pass
     
 
 if __name__ == '__main__':
