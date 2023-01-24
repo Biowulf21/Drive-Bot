@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os.path
+import pandas as pd
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -33,12 +34,18 @@ def main():
         # Save the credentials for the next run
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
+    
+    if os.path.isfile('subslist.xlsx'):
+        print('subslist.xlsx file found. Continuing...')
+    else:
+        print("No subslist.xlsx file found. Please create one and try again.")
 
     try:
-        service = build('drive', 'v3', credentials=creds)
-        result = searchFile(service=service)
-        # print(result)
-        changePermissions(folder_obj=result, service=service)
+        # service = build('drive', 'v3', credentials=creds)
+        # result = searchFile(service=service)
+
+        # # print(result)
+        # changePermissions(folder_obj=result, service=service)
 
         # Call the Drive v3 API
         
