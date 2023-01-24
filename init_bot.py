@@ -33,5 +33,6 @@ def initialize():
         print('subslist.xlsx file found. Continuing...')
     else:
         print("No subslist.xlsx file found. Please create one and try again.")
+        return
 
     return service

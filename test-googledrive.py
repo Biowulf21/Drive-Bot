@@ -91,6 +91,7 @@ def getSharableLink(service, id):
     ).execute()
 
     print(share_link)
+    # todo: input share link into the E column of the subslist.xlsx file
     
 
 if __name__ == '__main__':
